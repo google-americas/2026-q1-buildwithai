@@ -74,7 +74,7 @@ if [ -z "$PROJECT_ID" ]; then
 
     echo -e "Creating project: ${CYAN}${RANDOM_PROJECT_ID}${NC}"
 
-    if gcloud projects create "$RANDOM_PROJECT_ID" --quiet; then
+    if gcloud projects create "$RANDOM_PROJECT_ID" --labels=environment=development --quiet; then
         echo -e "${GREEN}✓ Successfully created project '$RANDOM_PROJECT_ID'.${NC}"
         PROJECT_ID="$RANDOM_PROJECT_ID"
     else
@@ -105,7 +105,7 @@ if [ -z "$PROJECT_ID" ]; then
                 break
             else
                 echo "Project '$TARGET_ID' not found. Attempting to create..."
-                if gcloud projects create "$TARGET_ID" --quiet; then
+                if gcloud projects create "$TARGET_ID" --labels=environment=development --quiet; then
                     echo -e "${GREEN}✓ Successfully created project '$TARGET_ID'.${NC}"
                     PROJECT_ID="$TARGET_ID"
                     break
