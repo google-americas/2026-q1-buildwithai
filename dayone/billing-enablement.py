@@ -8,6 +8,7 @@ from datetime import datetime
 try:
     from google.cloud import billing_v1
     from google.api_core import exceptions
+    from google.api_core.client_options import ClientOptions
 except ImportError:
     print("Installing google-cloud-billing...")
     subprocess.check_call(
@@ -24,6 +25,7 @@ except ImportError:
     )
     from google.cloud import billing_v1
     from google.api_core import exceptions
+    from google.api_core.client_options import ClientOptions
 
 # Pattern to detect our date suffix (e.g., "-202602181530")
 SUFFIX_PATTERN = re.compile(r"-\d{12}$")
@@ -34,8 +36,9 @@ SUFFIX_PATTERN = re.compile(r"-\d{12}$")
 def get_project_id_from_file():
     """Reads the project ID from the file created by the init.sh script."""
     project_file = os.path.expanduser("~/project_id.txt")
+    print(f"--- Searching for project ID file at: {project_file} ---")
     if not os.path.exists(project_file):
-        print(f"Error: Project ID file not found at {project_file}")
+        print(f"Error: Project ID file not found.")
         return None
     try:
         with open(project_file, "r") as f:
@@ -43,7 +46,7 @@ def get_project_id_from_file():
         if not project_id:
             print("Error: Project ID file is empty.")
             return None
-        print(f"--- Found Project ID from file: {project_id} ---")
+        print(f"--- SUCCESS: Found Project ID in file: '{project_id}' ---")
         return project_id
     except Exception as e:
         print(f"Error reading project ID from file: {e}")
@@ -52,17 +55,21 @@ def get_project_id_from_file():
 
 def enable_billing_api(project_id):
     """Enables the Cloud Billing API using a gcloud command."""
-    print("\nAttempting to enable the Cloud Billing API...")
+    print(
+        f"\n--- DEBUG: Attempting to enable Cloud Billing API for project: '{project_id}' ---"
+    )
+    cmd = [
+        "gcloud",
+        "services",
+        "enable",
+        "cloudbilling.googleapis.com",
+        "--project",
+        project_id,
+    ]
+    print(f"--- Running command: {' '.join(cmd)} ---")
     try:
         subprocess.run(
-            [
-                "gcloud",
-                "services",
-                "enable",
-                "cloudbilling.googleapis.com",
-                "--project",
-                project_id,
-            ],
+            cmd,
             check=True,
             capture_output=True,
             text=True,
@@ -158,6 +165,8 @@ def get_billing_accounts(client):
         return list(accounts)
     except exceptions.PermissionDenied as e:
         error_message = e.message.lower()
+        print(f"\n--- DEBUG: Caught PermissionDenied Exception ---")
+        print(f"--- RAW ERROR MESSAGE: {e.message} ---")
         if (
             "api has not been used" in error_message
             or "service is disabled" in error_message
@@ -258,7 +267,9 @@ if __name__ == "__main__":
             "\nScript finished with a critical error: Could not determine Project ID."
         )
     else:
-        billing_client = billing_v1.CloudBillingClient()
+        billing_client = billing_v1.CloudBillingClient(
+            client_options=ClientOptions(quota_project_id=project_id)
+        )
         accounts_result = get_billing_accounts(billing_client)
 
         if accounts_result == "API_DISABLED_OR_NO_PERMISSION":

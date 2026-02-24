@@ -29,6 +29,7 @@ from datetime import datetime
 try:
     from google.cloud import billing_v1
     from google.api_core import exceptions
+    from google.api_core.client_options import ClientOptions
 except ImportError:
     print("Installing google-cloud-billing...")
     subprocess.check_call(
@@ -45,6 +46,7 @@ except ImportError:
     )
     from google.cloud import billing_v1
     from google.api_core import exceptions
+    from google.api_core.client_options import ClientOptions
 
 
 # Pattern to detect our date suffix (e.g., "-202602181530")
@@ -296,7 +298,9 @@ def main():
     print(f"   Project: {project_id}")
 
     # Initialize billing client
-    billing_client = billing_v1.CloudBillingClient()
+    billing_client = billing_v1.CloudBillingClient(
+        client_options=ClientOptions(quota_project_id=project_id)
+    )
 
     # Check if billing is already enabled
     is_enabled, current_account = check_current_billing(billing_client, project_id)
