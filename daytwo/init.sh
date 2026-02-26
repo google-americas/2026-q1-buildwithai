@@ -14,6 +14,19 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# =============================================================================
+# Step -1: Cleanup Old Experiments
+# =============================================================================
+echo "Cleaning up lab environments..."
+rm -rf ~/prai-roadshow-lab-1-starter 2>/dev/null || true
+rm -rf ~/agent-evaluation-lab 2>/dev/null || true
+rm -rf ~/prai-roadshow-lab-3-starter 2>/dev/null || true
+
+if command -v uv &> /dev/null; then
+    echo "Clearing uv cache..."
+    uv cache clean
+fi
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
